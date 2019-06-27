@@ -8,10 +8,10 @@ This plugin is very sparse with feedback if there is an error or something doesn
 
 Set the defaults at the top of the plugin code:
 
-define("PB_MAGIC_LINK_VALID_MINUTES", 60);
+```define("PB_MAGIC_LINK_VALID_MINUTES", 60);
 define("PB_MAGIC_LINK_LENGTH", 16); //actual code length will be ~3x this number
 define("PB_MAGIC_LINK_LOGIN_URL", wp_login_url());
-define("PB_MAGIC_LINK_SUCCESS_URL", get_site_url()."/user/");
+define("PB_MAGIC_LINK_SUCCESS_URL", get_site_url()."/user/");```
 
 TO USE: add [request_magic_link] shortcode to a page where the user can request the magic link. Will display and process a form to allows the request.
 
