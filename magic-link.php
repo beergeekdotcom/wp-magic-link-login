@@ -3,7 +3,7 @@
 Plugin Name: Wordpress Magic Link Login
 Plugin URI: https://beergeek.com
 Description: A simple way for a user to login, if they forgot their password
-Version: 0.0.1
+Version: 0.1.0
 Author: Jeff Scott
 Author URI: http://beergeek.com
 License: GPLv2 or later
