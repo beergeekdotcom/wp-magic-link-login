@@ -18,3 +18,4 @@ define("PB_MAGIC_LINK_SUCCESS_URL", get_site_url()."/user/");
 TO USE: add [request_magic_link] shortcode to a page where the user can request the magic link. Will display and process a form to allows the request.
 
 2019-06-27 - early alpha release - first public release
+2020-02-11 - updated login process, removed the references to particular sites, removed internal logging calls
