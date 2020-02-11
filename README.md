@@ -2,7 +2,7 @@
 
 *This should be considered an early alpha and not be deployed to a production site or sites without extra security*
 
-A simple WordPress plugin that allows a user to request a "magic link" to login to a WordPress site with just their email address or username. 
+A simple WordPress plugin that allows a user to request a "magic link" to login to a WordPress site with just their email address or username. Facilitates passwordless login.
 
 This plugin is very sparse with feedback if there is an error or something doesn't match -- to help keep it obtuse and keep hackers guessing.
 
