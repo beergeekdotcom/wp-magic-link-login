@@ -1,6 +1,6 @@
 <?php
 /*
-Plugin Name: Beergeek Magic Link Login
+Plugin Name: Wordpress Magic Link Login
 Plugin URI: https://beergeek.com
 Description: A simple way for a user to login, if they forgot their password
 Version: 0.0.1
@@ -12,13 +12,12 @@ Inspired by: One Time Login - https://wordpress.org/plugins/one-time-login/ by D
 
 This plugin is very sparse with feedback if there is an error or something doesn't match -- to help keep it obtuse and keep hackers guessing.
 
-TO USE: add [request_magic_link] shortcode to a page where the user can request the magic link. Will display and process a form to allows the request.
+TO USE: add [request_magic_link] shortcode to a page where the user can request the magic link. Will display and process a form to allow the request.
 
 //REF: https://wordpress.org/plugins/one-time-login/
 //REF: https://security.stackexchange.com/questions/129846/implementing-an-autologin-link-in-an-email
 //REF: https://www.php.net/manual/en/function.openssl-random-pseudo-bytes.php
 
-//TODO: remove the Ultimate Member CSS references
 //TODO: admin > settings page for details and setting of the defaults
 //TODO: install / uninstall function to setup the defaults
 //TODO: login page and logout page for magic link
@@ -78,31 +77,11 @@ function pb_verify_magic_link_code($login_code) {
 
   //verify the user
   if (!$user = get_user_by("ID", $parts[0])) {
-    //log this
-    if (function_exists("pbGlobalLogStat")) {
-      pbGlobalLogStat("call", array(
-        'p' => 'magic_link_login', 
-        't' => "failed", 
-        's' => "no user id",
-        'u' => $parts[0],
-        'i' => base64url_decode($login_code)
-      ));
-    }
     return false;
   }
 
   //Make sure user isn't an editor or higher user
   if (user_can($user, "administrator") || user_can($user, "editor")) {
-    //log this
-    if (function_exists("pbGlobalLogStat")) {
-      pbGlobalLogStat("call", array(
-        'p' => 'magic_link_login', 
-        't' => "failed", 
-        's' => "user is admin",
-        'u' => $parts[0],
-        'i' => base64url_decode($login_code)
-      ));
-    }
     return false;
   }
 
@@ -111,59 +90,21 @@ function pb_verify_magic_link_code($login_code) {
 
   //is valid data?
   if (!$current_code || !is_array($current_code) || !$current_code['code'] || !$current_code['time']) {
-    //log this
-    if (function_exists("pbGlobalLogStat")) {
-      pbGlobalLogStat("call", array(
-        'p' => 'magic_link_login', 
-        't' => "failed", 
-        's' => "invalid code",
-        'u' => $user->user_email,
-        'i' => base64url_decode($login_code)
-      ));
-    }
     return false;
   }
 
   //Has it expired
   if ($current_code['time'] < (time() - (PB_MAGIC_LINK_VALID_MINUTES * 60))) {
-    //log this
-    if (function_exists("pbGlobalLogStat")) {
-      pbGlobalLogStat("call", array(
-        'p' => 'magic_link_login', 
-        't' => "failed", 
-        's' => "expired",
-        'u' => $user->user_email,
-        'i' => ($current_code['time'] - (time() - (PB_MAGIC_LINK_VALID_MINUTES * 60)))
-      ));
-    }
     return false;
   }
 
   //is the code the same
   if ($current_code['code'] <> $login_code) {
-    //log this
-    if (function_exists("pbGlobalLogStat")) {
-      pbGlobalLogStat("call", array(
-        'p' => 'magic_link_login', 
-        't' => "failed", 
-        's' => "code different",
-        'u' => $user->user_email
-      ));
-    }
     return false;
   }
 
   //verify the crypt too
   if (hash_equals($parts[2], crypt($parts[0].$user->user_email, $parts[2]))) {
-    //log this
-    if (function_exists("pbGlobalLogStat")) {
-      pbGlobalLogStat("call", array(
-        'p' => 'magic_link_login', 
-        't' => "correct", 
-        's' => "all good",
-        'u' => $user->user_email
-      ));
-    }
     return $user;
   }
 
@@ -178,17 +119,17 @@ function pb_verify_magic_link_code($login_code) {
 function pb_send_magic_link_email($user, $mlink) {
 
   $to      =  $user->user_email;
-  $subject =  'Your link to login to Beergeek';
-  $headers =  'From: Beergeek <help@beergeek.com>' . "\r\n" .
-              'Reply-To: help@beergeek.com' . "\r\n" .
-              'X-Mailer: PB/MagicLink' . "\r\n" .
+  $subject =  'Your link to login to '.get_bloginfo('name');
+  $headers =  'From: '.get_bloginfo('name').' Admin <'.get_bloginfo("admin_email").'>' . "\r\n" .
+              'Reply-To: '.get_bloginfo("admin_email") . "\r\n" .
+              'X-Mailer: WordPress/MagicLink' . "\r\n" .
               'Content-Type: text/html; charset=UTF-8' . "\r\n";
 
   $email_body = '<html>
   <body style="background: #ffffff;-webkit-font-smoothing: antialiased;-moz-osx-font-smoothing: grayscale;">
   <div style="max-width: 560px;padding: 20px;background: #ffffff;border-radius: 8px;margin:40px auto;font-family: Open Sans,Helvetica,Arial;font-size: 15px;color: #666; border: 3px solid #f2f2f2;">
   <div style="color: #000000;font-weight: normal;">
-    <div style="text-align: center;font-weight:600;font-size:26px;padding: 10px 0;border-bottom: solid 3px #eeeeee;"><img src="https://www.Beergeek.com/wp-content/uploads/2018/09/weblogo-wide270-65.png"></div>
+    <div style="text-align: center;font-weight:600;font-size:26px;padding: 10px 0;border-bottom: solid 3px #eeeeee;"><img src="https://via.placeholder.com/270x70?text='.urlencode(get_bloginfo('name')).'"></div>
     <div style="clear:both"></div>
   </div>  
   <div style="padding: 20px 20px 20px 20px">
@@ -198,9 +139,9 @@ function pb_send_magic_link_email($user, $mlink) {
     $email_body .= '<p style="color #000000;">Hello '.$user->user_nicename.',</p>';
   }
 
-  $email_body .= '<p style="padding: 30px 0; color #000000;">Sorry you are having problems logging into Beergeek. Here is a magic login link you can use. It is valid for '.PB_MAGIC_LINK_VALID_MINUTES.' minutes from the time it was requested which works out to be '.date("m/d/Y g:i:s a e",((int)$mlink['time'] + ((int)PB_MAGIC_LINK_VALID_MINUTES * 60))).'. The link will also expire once it is used.</p>';
+  $email_body .= '<p style="padding: 30px 0; color #000000;">Sorry you are having problems logging into '.get_bloginfo('name').'. Here is a magic login link you can use. It is valid for '.PB_MAGIC_LINK_VALID_MINUTES.' minutes from the time it was requested which works out to be '.date("m/d/Y g:i:s a e",((int)$mlink['time'] + ((int)PB_MAGIC_LINK_VALID_MINUTES * 60))).'. The link will also expire once it is used.</p>';
 
-  $email_body .= '<div style="padding: 30px 0 40px 0;text-align: center;"><a href="'.PB_MAGIC_LINK_LOGIN_URL."?ml=".$mlink['code'].'" style="background: #555555;color: #fff;padding: 12px 30px;text-decoration: none;border-radius: 3px;letter-spacing: 0.3px;">Login to Beergeek</a></div>';
+  $email_body .= '<div style="padding: 30px 0 40px 0;text-align: center;"><a href="'.PB_MAGIC_LINK_LOGIN_URL."?ml=".$mlink['code'].'" style="background: #555555;color: #fff;padding: 12px 30px;text-decoration: none;border-radius: 3px;letter-spacing: 0.3px;">Login to Wordpress</a></div>';
 
   $email_body .= '<p style="padding: 30px 0; color #000000;">If you did not make this request, ignore this email or report it to us by replying to this email.</p>';
 
@@ -208,28 +149,18 @@ function pb_send_magic_link_email($user, $mlink) {
 
   $email_body .= '<div style="padding: 30px 0; color #000000;">
       <p style="color #000000;">Cheers,</p>
-      <p style="color #000000;">The <a href="http://www.beergeek.com" style="color: #000000;text-decoration: none;">Beergeek</a> Team</p>
+      <p style="color #000000;">The <a href="'.get_bloginfo('url').'" style="color: #000000;text-decoration: none;">'.get_bloginfo('name').'</a> Team</p>
     </div>';
 
   $email_body .= '</div></div></div>';
 
   $success = mail($to, $subject, $email_body, $headers);
 
-  //log this
-  if (function_exists("pbGlobalLogStat")) {
-    pbGlobalLogStat("call", array(
-      'p' => 'magic_link_login', 
-      't' => "requested", 
-      's' => "",
-      'u' => $user->user_email
-    ));
-  }
-
   if ($success) {
     return true;
   } else {
     $errorMessage = error_get_last()['message'];
-    mail ("jeff@Beergeek.com", "[PB] Error sending magic link email to $to", $errorMessage."\n----------\n".$email_body,$headers);
+    mail (get_bloginfo("admin_email"), "[MLL] Error sending magic link email to $to", $errorMessage."\n----------\n".$email_body,$headers);
     return false;
   }
 }
@@ -245,9 +176,26 @@ function pb_magic_link_handle_token($magic_link_code) {
     exit;
   }
 
-  do_action( 'pb_magic_link_handle_token_success', $user );
   delete_user_meta( $user->ID, 'magic_link' );
+ 
+   //Log the user out if they are logged in
+  if ( is_user_logged_in() ) {
+    wp_logout();
+  }
+  wp_clear_auth_cookie();
+
+  //Log the user in
+  clean_user_cache( $user->ID );
+  wp_set_current_user( $user->ID );
   wp_set_auth_cookie( $user->ID, true, is_ssl() );
+  update_user_caches( $user );
+  wp_signon( array( 'user_login' => $user->data->user_login, 'user_pass' => $user->data->user_pass, 'remember' => true ) );
+
+  //Ultimate Member version -- maybe
+  //UM()->user()->auto_login( $user->ID, true );
+
+  do_action( 'pb_magic_link_handle_token_success', $user );
+
   wp_safe_redirect( PB_MAGIC_LINK_SUCCESS_URL );
   exit;
 }
@@ -308,23 +256,10 @@ function pb_request_magic_link() {
       <?php } else { ?>
       <form method="post" action="">
         <?php wp_nonce_field('request_magic_link'); ?>
-        <div class="um-field um-field-block um-field-type_block">
-          <div class="um-field-block">
-            <div style="text-align:center;">
-              To request a login link, please enter your email address or username below and click the button.
-            </div>
-          </div>
-        </div>
-        <div class="um-field um-field-username_req um-field-text um-field-type_text" data-key="username_req">
-          <div class="um-field-area">
-            <input autocomplete="off" class="um-form-field valid " type="text" name="username_req" id="username_req" value="<?php if ($_GET['userid']) { echo $_GET['userid']; } ?>" placeholder="Enter your username or email" data-validate="" data-key="username_req">
-          </div>
-        </div>
-        <div class="um-col-alt um-col-alt-b">
-          <div class="um-center">
-            <input type="submit" value="Request Magic Login Link" class="um-button" id="um-submit-btn" />
-          </div>
-          <div class="um-clear"></div>
+        <div style="text-align:center;">
+          To request a login link, please enter your email address or username below and click the button.
+          <input autocomplete="off" type="text" name="username_req" id="username_req" value="<?php if ($_GET['userid']) { echo $_GET['userid']; } ?>" placeholder="Enter your username or email" data-validate="" data-key="username_req">
+            <input type="submit" value="Request Magic Login Link" />
         </div>
      <?php } ?>
     </form>
